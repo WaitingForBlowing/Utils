@@ -18,7 +18,7 @@ import java.io.InputStream;
  </dependency>
  ----------------------------------
  */
-public class MybatisUtil {
+public final class MybatisUtil {
 
     private static InputStream in;
     private static SqlSession session;

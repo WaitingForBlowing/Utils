@@ -9,7 +9,7 @@ import java.util.Date;
  * 对时间处理相关方法进行二次封装的工具类
  * 将对时间的操作进行封装
  */
-public class TimeUtil {
+public final class TimeUtil {
 
     private static final Calendar calendar = Calendar.getInstance();
     private static final SimpleDateFormat formatL=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

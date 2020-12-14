@@ -3,11 +3,7 @@ package Utils;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.Properties;
-import java.util.zip.DataFormatException;
 
 /*
  maven依赖
@@ -25,45 +21,63 @@ import java.util.zip.DataFormatException;
  ----------------------------------
  */
 
-public class EmailUtil {
-    private static BufferedReader stdIn =
-            new BufferedReader(new InputStreamReader(System.in));
-    private static PrintWriter stdOut = new PrintWriter(System.out, true);
-    private static PrintWriter stdErr = new PrintWriter(System.err, true);
+public final class EmailUtil {
+    private static final String USER = ""; // 发件人称号，同邮箱地址
+    private static final String PASSWORD = ""; // 如果是qq邮箱可以使户端授权码，或者登录密码
 
-    public static void send(String mail, String content) throws MessagingException, DataFormatException {
-        String match = "^\\s*\\w+(?:\\.{0,1}[\\w-]+)*@[a-zA-Z0-9]+(?:[-.][a-zA-Z0-9]+)*\\.[a-zA-Z]+\\s*$";
-        if (mail.matches(match)) {
-            String smtp = "smtp.qq.com";
-            final String username = "2697666955@qq.com";
-            final String password = "rfvghaocfbjydhbj";
-            // 连接到SMTP服务器587端口:
-            Properties props = new Properties();
-            props.put("mail.smtp.host", smtp); // SMTP主机名
-            props.put("mail.smtp.port", "587"); // 主机端口号
-            props.put("mail.smtp.auth", "true"); // 是否需要用户认证
-            props.put("mail.smtp.starttls.enable", "true"); // 启用TLS加密
-            // 获取Session实例:
-            Session session = Session.getInstance(props, new Authenticator() {
+    /**
+     *
+     * @param to 收件人邮箱
+     * @param text 邮件正文
+     * @param title 标题
+     */
+    /* 发送验证信息的邮件 */
+    public static boolean sendMail(String to, String text, String title){
+        try {
+            final Properties props = new Properties();
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.host", "smtp.qq.com");
+
+            // 发件人的账号
+            props.put("mail.user", USER);
+            //发件人的密码
+            props.put("mail.password", PASSWORD);
+
+            // 构建授权信息，用于进行SMTP进行身份验证
+            Authenticator authenticator = new Authenticator() {
+                @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username, password);
+                    // 用户名、密码
+                    String userName = props.getProperty("mail.user");
+                    String password = props.getProperty("mail.password");
+                    return new PasswordAuthentication(userName, password);
                 }
-            });
-            session.setDebug(false);
-            MimeMessage message = new MimeMessage(session);
-            // 设置发送方地址:
-            message.setFrom(new InternetAddress("2697666955@qq.com"));
-            // 设置接收方地址:
-            message.setRecipient(Message.RecipientType.TO, new InternetAddress(mail));
-            // 设置邮件主题:
-            message.setSubject("智能制造云工厂", "UTF-8");
-            // 设置邮件正文:
-            message.setText(content, "UTF-8");
-            // 发送:
+            };
+            // 使用环境属性和授权信息，创建邮件会话
+            Session mailSession = Session.getInstance(props, authenticator);
+            // 创建邮件消息
+            MimeMessage message = new MimeMessage(mailSession);
+            // 设置发件人
+            String username = props.getProperty("mail.user");
+            InternetAddress form = new InternetAddress(username);
+            message.setFrom(form);
+
+            // 设置收件人
+            InternetAddress toAddress = new InternetAddress(to);
+            message.setRecipient(Message.RecipientType.TO, toAddress);
+
+            // 设置邮件标题
+            message.setSubject(title);
+
+            // 设置邮件的内容体
+            message.setContent(text, "text/html;charset=UTF-8");
+            // 发送邮件
             Transport.send(message);
-        }else {
-            throw new DataFormatException("Wrong Mailbox");
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
         }
+        return false;
     }
 
 }
